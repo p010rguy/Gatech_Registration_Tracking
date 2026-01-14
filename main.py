@@ -1,5 +1,6 @@
 import json
 import smtplib
+from email.message import EmailMessage
 import time
 
 import requests
@@ -14,11 +15,16 @@ course = {
 classSubject ="CS" #Enter subject here
 term = "202602" #Enter term here
 
-sender = "" #Enter your email here
-receiver = "" #Enter your email here
-password = "" #Enter App password here
+sender = "" #Enter your Gmail here
+receiver = "" #Enter your Gmail here
+password = "" #Enter App password here. Link to get app password: https://www.google.com/url?sa=t&source=web&rct=j&opi=89978449&url=https://myaccount.google.com/apppasswords&ved=2ahUKEwjM1ajegouSAxUWj2oFHVJsN6AQFnoECB8QAQ&usg=AOvVaw1rVibBR6kQTiUjqa0l_f8W
 subject = "Registration Check"
 body = ""
+
+server = smtplib.SMTP("smtp.gmail.com", 587)
+server.starttls()
+server.login(sender, password)
+
 params = {
     "txt_subject": classSubject,
     "txt_courseNumber": 0,
@@ -43,26 +49,22 @@ while len(course):
         
         for sec in r["data"]:
             if int(sec["courseReferenceNumber"]) == course[courseNumber]:
-                print(sec["seatsAvailable"])
+                print(f"{course[courseNumber]} : {sec["seatsAvailable"]}")
                 if sec["seatsAvailable"]: 
-                    body = f"{courseNumber} current open seats: {sec["seatsAvailable"]}"
+                    body = f"{courseNumber} current open seats: {sec["seatsAvailable"]}" # Email message. Can change 
 
-                    messages = f"""From: {sender}
-                    To: {receiver}
-                    Subject: {subject} \n
-                    {body}
-                    """                    
-                    server = smtplib.SMTP("smtp.gmail.com", 587)
-                    server.starttls()
+                    msg = EmailMessage()
+                    msg['Subject'] = subject
+                    msg['From'] = sender
+                    msg['To'] = receiver
+                    msg.set_content(body)
 
-                    server.login(sender, password)
-                    print("logged in")
-
-                    server.sendmail(sender, receiver, messages)
+                    server.send_message(msg)
                     print("email has been sent")
                     del course[courseNumber]
                     break
-    time.sleep(1)
+    time.sleep(1) # Update rate. Can change if need be. Unit in Second (currently checking once per minute)
+
 
 # params["txt_courseNumber"] = 1332
 
